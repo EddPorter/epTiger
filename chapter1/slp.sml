@@ -1,3 +1,7 @@
+(*-------------------------------------
+  This section ©1998 by Andrew W. Appel
+  -------------------------------------*)
+
 type id = string
 
 datatype binop = Plus | Minus | Times | Div
@@ -10,20 +14,26 @@ datatype stm = CompoundStm of stm * stm
 	     | NumExp of int
              | OpExp of exp * binop * exp
              | EseqExp of stm * exp
-(* Example program inputs to interpret *)
 val prog = 
  CompoundStm(AssignStm("a",OpExp(NumExp 5, Plus, NumExp 3)),
   CompoundStm(AssignStm("b",
       EseqExp(PrintStm[IdExp"a",OpExp(IdExp"a", Minus,NumExp 1)],
            OpExp(NumExp 10, Times, IdExp"a"))),
    PrintStm[IdExp "b"]))
+
+
+(*-------------------------------------
+  This section ©2013 by Edd Porter
+  -------------------------------------*)
+
+(* Further example program inputs to interpret *)
 val prog2 = PrintStm[IdExp "a", IdExp "b", IdExp "c"]
 val prog3 = PrintStm[EseqExp(PrintStm[IdExp "a", IdExp "b", IdExp "c"], NumExp 1), IdExp "2"]
 val prog4 = PrintStm[EseqExp(PrintStm[IdExp "a"], NumExp 1), IdExp "b", IdExp "c", IdExp "d"]
 val prog5 = PrintStm[NumExp 5];
 val prog6 = PrintStm[NumExp 5, NumExp 6];
 val prog7 = AssignStm("a", NumExp 2)
-val prog8 = AssignStm("b", OpExp(EseqExp(PrintStm[IdExp "a", IdExp "b", IdExp "c"], NumExp 4), Plus, IdExp "d"))
+val prog8 = AssignStm("b", OpExp(EseqExp(PrintStm[IdExp "a", NumExp 8, IdExp "c"], NumExp 4), Plus, IdExp "d"))
 
 (* maxargs : stm->int *)
 (* returns the maximum number of arguments of any `print` statement with
