@@ -16,8 +16,6 @@
   | FUNCTION | VAR | TYPE 
   | UMINUS | IFX
 
-%nonterm  exp | program | lvalue | expseq | decs | dec | tydec | vardec | fundec | ty | tyfields | varexp | tyafields | funclist
-
 %pos int
 %verbose
 %start program
@@ -28,6 +26,16 @@
 
 %keyword WHILE FOR TO BREAK LET IN END FUNCTION VAR TYPE ARRAY IF THEN ELSE 
 	DO OF NIL
+  
+%value ID ("bogus")
+%value INT (1)
+%value STRING ("")
+
+(*-------------------------------------
+  This section ©2014 by Edd Porter
+  -------------------------------------*)
+  
+%nonterm  exp | program | lvalue | expseq | decs | dec | tydec | vardec | fundec | ty | tyfields | varexp | tyafields | funclist
 
 (* %prefer THEN ELSE LPAREN *)
 %nodefault
@@ -43,15 +51,9 @@
 %left TIMES DIVIDE
 %nonassoc UMINUS
 
-%value ID ("bogus")
-%value INT (1)
-%value STRING ("")
+
 
 %%
-
-(*-------------------------------------
-  This section ©2014 by Edd Porter
-  -------------------------------------*)
 
 program	: exp				()
 

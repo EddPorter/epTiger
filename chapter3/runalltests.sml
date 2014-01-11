@@ -1,3 +1,7 @@
+(*-------------------------------------
+  This section ©2014 by Edd Porter
+  -------------------------------------*)
+
 (* run CM.make "sources.cm"; first *)
 let
   fun run n = Parse.parse ("../testcases/test"^Int.toString(n)^".tig");
