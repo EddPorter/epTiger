@@ -11,11 +11,12 @@
   | LBRACE | RBRACE | DOT 
   | PLUS | MINUS | TIMES | DIVIDE | EQ | NEQ | LT | LE | GT | GE
   | AND | OR | ASSIGN
-  | ARRAY | IF | THEN | ELSE | WHILE | FOR | TO | DO | LET | IN | END | OF 
+  | ARRAY | IF | THEN | ELSE | WHILE | FOR | TO | DO | LET | IN | END | OF
   | BREAK | NIL
   | FUNCTION | VAR | TYPE 
+  | UMINUS | IFX
 
-%nonterm  exp | program
+%nonterm  exp | program | lvalue | expseq | decs | dec | tydec | vardec | fundec | ty | tyfields | varexp | tyafields | funclist
 
 %pos int
 %verbose
@@ -28,7 +29,19 @@
 %keyword WHILE FOR TO BREAK LET IN END FUNCTION VAR TYPE ARRAY IF THEN ELSE 
 	DO OF NIL
 
-%prefer THEN ELSE LPAREN
+(* %prefer THEN ELSE LPAREN *)
+%nodefault
+
+%nonassoc IFX
+%nonassoc ELSE
+%nonassoc ASSIGN  (* this makes a := 4*5 evaluate as a:=(4*5) not (a:=4)*5 *)
+          DO      (* this makes the final expression WHILE a+b DO 4+5 bind together within the DO *)
+%left OR
+%left AND
+%nonassoc EQ NEQ GT LT GE LE
+%left PLUS MINUS
+%left TIMES DIVIDE
+%nonassoc UMINUS
 
 %value ID ("bogus")
 %value INT (1)
@@ -36,7 +49,80 @@
 
 %%
 
+(*-------------------------------------
+  This section ©2014 by Edd Porter
+  -------------------------------------*)
+
 program	: exp				()
 
-	
-exp: 			()
+varexp: ID LBRACK exp RBRACK OF varexp ()
+      | exp                         ()
+
+exp: LET decs IN expseq END         ()
+   | INT                            ()
+   | STRING                         ()
+   | NIL                            ()
+   | BREAK                          ()
+   | lvalue ASSIGN exp              ()
+   | lvalue                         ()
+   | IF exp THEN exp ELSE exp       ()
+   | IF exp THEN exp %prec IFX      ()
+   | WHILE exp DO exp               ()
+   | FOR ID ASSIGN exp TO exp DO exp  ()
+   | ID LPAREN funclist RPAREN      ()
+   | ID LBRACE tyafields RBRACE  ()
+   | exp AND exp                    ()
+   | exp OR exp                     ()
+   | exp EQ exp                     ()
+   | exp NEQ exp                    ()
+   | exp PLUS exp                   ()
+   | exp MINUS exp                  ()
+   | exp TIMES exp                  ()
+   | exp DIVIDE exp                 ()
+   | exp GT exp                         ()
+   | exp GE exp                         ()
+   | exp LT exp                         ()
+   | exp LE exp                         ()
+   | LPAREN expseq RPAREN              ()
+   | MINUS exp %prec UMINUS         ()
+
+(* expseq: zero or more expressions, separated by semi-colons *)
+expseq: expseq SEMICOLON exp        ()
+      | exp                         ()
+      |                             ()
+      
+(* a sequence of zero or more declarations separated by whitespace, i.e. no punctuation *)
+decs: decs dec                      ()
+    |                               ()
+
+dec: tydec                          ()
+   | vardec                         ()
+   | fundec                         ()
+
+tydec: TYPE ID EQ ty                ()
+
+ty: ARRAY OF ID                     ()
+  | ID                              ()
+  | LBRACE tyfields RBRACE          ()
+
+(* zero or more record type declarations separated by commas *)
+tyfields: tyfields COMMA ID COLON ID  ()
+        | ID COLON ID                 ()
+        |                             ()
+tyafields: tyafields COMMA ID EQ varexp  ()
+        | ID EQ varexp                   ()
+        |                             ()
+        
+vardec: VAR ID COLON ID ASSIGN varexp ()
+      | VAR ID ASSIGN varexp          ()
+
+lvalue: lvalue DOT ID                 ()
+      | ID                            ()
+      | lvalue LBRACK exp RBRACK         ()
+      
+fundec: FUNCTION ID LPAREN tyfields RPAREN EQ exp           ()      
+      | FUNCTION ID LPAREN tyfields RPAREN COLON ID EQ exp  ()
+      
+funclist: funclist COMMA exp          ()
+        | exp                         ()
+        |                             ()
